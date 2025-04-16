@@ -58,7 +58,7 @@ def get_args():
                         help='depth of decoder')
     parser.add_argument('--input_size', default=224, type=int,
                         help='videos input size for backbone')
-    parser.add_argument('--device', default='cuda:0',
+    parser.add_argument('--device', default='cpu',
                         help='device to use for training / testing')
     parser.add_argument('--imagenet_default_mean_and_std', default=True, action='store_true')
     parser.add_argument('--mask_ratio', default=0.75, type=float,
