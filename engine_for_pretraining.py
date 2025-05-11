@@ -4,10 +4,11 @@ from typing import Iterable
 import torch
 import torch.nn as nn
 import utils
+import wandb
 from einops import rearrange
 from timm.data.constants import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
-def train_one_epoch(model: torch.nn.Module, data_loader: Iterable, optimizer: torch.optim.Optimizer,
+def train_one_epoch(model: torch.nn.Module, criterion, data_loader: Iterable, optimizer: torch.optim.Optimizer,
                     device: torch.device, epoch: int, loss_scaler, max_norm: float = 0, patch_size: int = 16, 
                     normlize_target: bool = True, log_writer=None, lr_scheduler=None, start_steps=None,
                     lr_schedule_values=None, wd_schedule_values=None):
@@ -19,7 +20,7 @@ def train_one_epoch(model: torch.nn.Module, data_loader: Iterable, optimizer: to
     print_freq = 10
 
     loss_func = nn.MSELoss()
-
+    print('data_loader', data_loader)
     for step, batch in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
         # assign learning rate & weight decay for each step
         it = start_steps + step  # global training iteration
@@ -67,9 +68,12 @@ def train_one_epoch(model: torch.nn.Module, data_loader: Iterable, optimizer: to
         is_second_order = hasattr(optimizer, 'is_second_order') and optimizer.is_second_order
         grad_norm = loss_scaler(loss, optimizer, clip_grad=max_norm,
                                 parameters=model.parameters(), create_graph=is_second_order)
-        loss_scale_value = loss_scaler.state_dict()["scale"]
-
-        torch.cuda.synchronize()
+        print('loss_scaler', loss_scaler)
+        # loss_scale_value = loss_scaler.state_dict()["scale"]
+        state = loss_scaler.state_dict()
+        loss_scale_value = state["scale"] if "scale" in state else None
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
 
         metric_logger.update(loss=loss_value)
         metric_logger.update(loss_scale=loss_scale_value)

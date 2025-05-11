@@ -39,8 +39,21 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         model.micro_steps = 0
     else:
         optimizer.zero_grad()
+    print('data_loader', data_loader)
+    print("Testing data_loader...")
+    
+    for i, batch in enumerate(data_loader):
+        if batch is None or batch[0] is None:
+            print(f"[Batch {i}] Skipped: Invalid sample (None)")
+        else:
+            samples, targets = batch[0], batch[1]
+            print(f"[Batch {i}] Sample shape: {samples.shape}, Target: {targets}")
+        if i >= 2:
+            break  # Only check a few batches
+    print('here')
 
     for data_iter_step, (samples, targets, _, _) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
+        print('hre-3')
         step = data_iter_step // update_freq
         if step >= num_training_steps_per_epoch:
             continue
@@ -97,9 +110,13 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                 optimizer.zero_grad()
                 if model_ema is not None:
                     model_ema.update(model)
-            loss_scale_value = loss_scaler.state_dict()["scale"]
+            print('loss_scaler', loss_scaler)
+            # loss_scale_value = loss_scaler.state_dict()["scale"]
+            state = loss_scaler.state_dict()
+            loss_scale_value = state["scale"] if "scale" in state else None
 
-        torch.cuda.synchronize()
+        if torch.cuda.is_available():
+            torch.cuda.synchronize()
 
         if mixup_fn is None:
             class_acc = (output.max(-1)[-1] == targets).float().mean()
@@ -134,6 +151,7 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
 
             log_writer.set_step()
 
+    print('here-2')
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
     print("Averaged stats:", metric_logger)

@@ -1,0 +1,13 @@
+shrec21_video_dataset/
+
+k400_videomae_finetune_base_patch16_224_frame_16x4_tube_mask_ratio_0.9_e100/
+
+k400_videomae_pretrain_base_patch16_224_frame_16x4_tube_mask_ratio_0.9_e100/
+
+pre-training-test-models
+
+__pycache__/
+
+VideoMAE_Checkpoints/
+
+wandb/

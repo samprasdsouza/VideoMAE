@@ -6,6 +6,8 @@ import torch
 import torch.backends.cudnn as cudnn
 import json
 import os
+import wandb
+
 from functools import partial
 from pathlib import Path
 from collections import OrderedDict
@@ -32,7 +34,7 @@ def get_args():
     parser.add_argument('--save_ckpt_freq', default=100, type=int)
 
     # Model parameters
-    parser.add_argument('--model', default='vit_base_patch16_224', type=str, metavar='MODEL',
+    parser.add_argument('--model', default='vit_finetune_base_patch16_224', type=str, metavar='MODEL',
                         help='Name of model to train')
     parser.add_argument('--tubelet_size', type=int, default= 2)
     parser.add_argument('--input_size', default=224, type=int,
@@ -46,6 +48,15 @@ def get_args():
                         help='Attention dropout rate (default: 0.)')
     parser.add_argument('--drop_path', type=float, default=0.1, metavar='PCT',
                         help='Drop path rate (default: 0.1)')
+
+    # wandb
+    parser.add_argument('--wandb_weights', default="no", type=str)
+
+    parser.add_argument('--wandb_name', default="samprasjobs02", type=str)
+
+    parser.add_argument('--project_name', default="cryo-et-pretrain", type=str)
+
+    parser.add_argument('--notes', default='', type=str)
 
     parser.add_argument('--disable_eval_during_finetuning', action='store_true', default=False)
     parser.add_argument('--model_ema', action='store_true', default=False)
@@ -153,7 +164,7 @@ def get_args():
                         help='path where to save, empty for no saving')
     parser.add_argument('--log_dir', default=None,
                         help='path where to tensorboard log')
-    parser.add_argument('--device', default='cuda',
+    parser.add_argument('--device', default='cpu',
                         help='device to use for training / testing')
     parser.add_argument('--seed', default=0, type=int)
     parser.add_argument('--resume', default='',
@@ -172,6 +183,7 @@ def get_args():
                         help='Perform evaluation only')
     parser.add_argument('--dist_eval', action='store_true', default=False,
                         help='Enabling distributed evaluation')
+
     parser.add_argument('--num_workers', default=10, type=int)
     parser.add_argument('--pin_mem', action='store_true',
                         help='Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.')
@@ -215,6 +227,13 @@ def main(args, ds_init):
 
     device = torch.device(args.device)
 
+    wandb.init(
+        project="cryo-et-pretrain",
+        dir=".",
+        config=vars(args),
+        notes=args.notes,
+        # mode="offline"
+    )
     # fix the seed for reproducibility
     seed = args.seed + utils.get_rank()
     torch.manual_seed(seed)
@@ -454,6 +473,8 @@ def main(args, ds_init):
     )
     if args.weight_decay_end is None:
         args.weight_decay_end = args.weight_decay
+    
+    print('here-1', args.weight_decay, args.weight_decay_end, args.epochs, num_training_steps_per_epoch)
     wd_schedule_values = utils.cosine_scheduler(
         args.weight_decay, args.weight_decay_end, args.epochs, num_training_steps_per_epoch)
     print("Max WD = %.7f, Min WD = %.7f" % (max(wd_schedule_values), min(wd_schedule_values)))
@@ -492,10 +513,12 @@ def main(args, ds_init):
     start_time = time.time()
     max_accuracy = 0.0
     for epoch in range(args.start_epoch, args.epochs):
+        print('----starting-epoch----')
         if args.distributed:
             data_loader_train.sampler.set_epoch(epoch)
         if log_writer is not None:
             log_writer.set_step(epoch * num_training_steps_per_epoch * args.update_freq)
+        print('--before--start--')
         train_stats = train_one_epoch(
             model, criterion, data_loader_train, optimizer,
             device, epoch, loss_scaler, args.clip_grad, model_ema, mixup_fn,
@@ -503,6 +526,7 @@ def main(args, ds_init):
             lr_schedule_values=lr_schedule_values, wd_schedule_values=wd_schedule_values,
             num_training_steps_per_epoch=num_training_steps_per_epoch, update_freq=args.update_freq,
         )
+        print('--after--start--')
         if args.output_dir and args.save_ckpt:
             if (epoch + 1) % args.save_ckpt_freq == 0 or epoch + 1 == args.epochs:
                 utils.save_model(

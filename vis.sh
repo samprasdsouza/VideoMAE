@@ -1,9 +1,9 @@
 # Set the path to save video
-OUTPUT_DIR='TODO/VideoMAE/demo/vis_k400_1_0.9'
+OUTPUT_DIR='TODO-2/VideoMAE/demo/vis_k400_1_0.9'
 # path to video for visualization
-VIDEO_PATH='TODO/TODO.mp4'
+VIDEO_PATH='TODO-2/class_mask_standardized_x_gray.mp4'
 # path to pretrain model
-MODEL_PATH='VideoMAE_Checkpoints/ViT-B/Kinetics-400/checkpoint.pth'
+MODEL_PATH='VideoMAE_Checkpoints/ViT-B/Kinetics-400/checkpoint-10.pth'
 
 python3 run_videomae_vis.py \
     --mask_ratio 0.9 \

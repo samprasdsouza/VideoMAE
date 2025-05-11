@@ -5,6 +5,7 @@ import time
 import torch
 import torch.backends.cudnn as cudnn
 import json
+import wandb
 import os
 from pathlib import Path
 from timm.models import create_model
@@ -43,6 +44,15 @@ def get_args():
                         
     parser.add_argument('--normlize_target', default=True, type=bool,
                         help='normalized the target patch pixels')
+
+    # wandb
+    parser.add_argument('--wandb_weights', default="no", type=str)
+
+    parser.add_argument('--wandb_name', default="samprasjobs02", type=str)
+
+    parser.add_argument('--project_name', default="cryo-et-pretrain", type=str)
+
+    parser.add_argument('--notes', default='', type=str)
 
     # Optimizer parameters
     parser.add_argument('--opt', default='adamw', type=str, metavar='OPTIMIZER',
@@ -153,15 +163,23 @@ def main(args):
 
     # get dataset
     dataset_train = build_pretraining_dataset(args)
-
+    print(dataset_train, len(dataset_train))
 
     num_tasks = utils.get_world_size()
     global_rank = utils.get_rank()
     sampler_rank = global_rank
 
+    wandb.init(
+        project="cryo-et-pretrain",
+        dir=".",
+        config=vars(args),
+        notes=args.notes,
+        # mode="offline"
+    )
+
     total_batch_size = args.batch_size * num_tasks
     num_training_steps_per_epoch = len(dataset_train) // total_batch_size
-
+    print('num_training_steps_per_epoch', num_training_steps_per_epoch)
     sampler_train = torch.utils.data.DistributedSampler(
         dataset_train, num_replicas=num_tasks, rank=sampler_rank, shuffle=True
     )
@@ -213,8 +231,10 @@ def main(args):
     )
     if args.weight_decay_end is None:
         args.weight_decay_end = args.weight_decay
+    print('here-1', args.weight_decay, args.weight_decay_end, args.epochs, num_training_steps_per_epoch)
     wd_schedule_values = utils.cosine_scheduler(
         args.weight_decay, args.weight_decay_end, args.epochs, num_training_steps_per_epoch)
+    print('wd_schedule_values', wd_schedule_values)
     print("Max WD = %.7f, Min WD = %.7f" % (max(wd_schedule_values), min(wd_schedule_values)))
 
     utils.auto_load_model(
@@ -242,7 +262,10 @@ def main(args):
                 utils.save_model(
                     args=args, model=model, model_without_ddp=model_without_ddp, optimizer=optimizer,
                     loss_scaler=loss_scaler, epoch=epoch)
-
+                
+                if args.wandb_weights == "yes":
+                    wandb.save(str(Path(args.output_dir) / ('checkpoint-%s.pth' % str(epoch))))
+                
         log_stats = {**{f'train_{k}': v for k, v in train_stats.items()},
                      'epoch': epoch, 'n_parameters': n_parameters}
 

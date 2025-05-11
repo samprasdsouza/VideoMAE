@@ -35,7 +35,7 @@ class DataAugmentationForVideoMAE(object):
         return repr
 
 
-def build_pretraining_dataset(args):
+def  build_pretraining_dataset(args):
     transform = DataAugmentationForVideoMAE(args)
     dataset = VideoMAE(
         root=None,
@@ -67,7 +67,8 @@ def build_dataset(is_train, test_mode, args):
         else:  
             mode = 'validation'
             anno_path = os.path.join(args.data_path, 'val.csv') 
-
+        print('mode-here', mode)
+        print('annon_path', anno_path)
         dataset = VideoClsDataset(
             anno_path=anno_path,
             data_path='/',

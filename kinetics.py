@@ -85,6 +85,8 @@ class VideoClsDataset(Dataset):
             scale_t = 1
 
             sample = self.dataset_samples[index]
+            if len(sample) > 0:
+                sample = sample[:-1]  # remove last sample
             buffer = self.loadvideo_decord(sample, sample_rate_scale=scale_t) # T H W C
             if len(buffer) == 0:
                 while len(buffer) == 0:
@@ -111,6 +113,8 @@ class VideoClsDataset(Dataset):
 
         elif self.mode == 'validation':
             sample = self.dataset_samples[index]
+            if len(sample) > 0:
+                sample = sample[:-1]  # remove last sample
             buffer = self.loadvideo_decord(sample)
             if len(buffer) == 0:
                 while len(buffer) == 0:
@@ -123,6 +127,8 @@ class VideoClsDataset(Dataset):
 
         elif self.mode == 'test':
             sample = self.test_dataset[index]
+            if len(sample) > 0:
+                sample = sample[:-1]  # remove last sample
             chunk_nb, split_nb = self.test_seg[index]
             buffer = self.loadvideo_decord(sample)
 
@@ -479,7 +485,11 @@ class VideoMAE(torch.utils.data.Dataset):
                 # data in the "setting" file do not have extension, e.g., demo
                 # So we need to provide extension (i.e., .mp4) to complete the file name.
                 video_name = '{}.{}'.format(directory, self.video_ext)
-
+            video_name.strip().rstrip(',')
+            if video_name.endswith(','):
+                video_name = video_name[:-1]
+            print('video_name', video_name)
+            # print("Current Working Directory: ", os.getcwd())
             decord_vr = decord.VideoReader(video_name, num_threads=1)
             duration = len(decord_vr)
 
