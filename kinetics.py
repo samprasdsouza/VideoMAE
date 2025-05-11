@@ -514,6 +514,7 @@ class VideoMAE(torch.utils.data.Dataset):
             for line in data:
                 line_info = line.split(' ')
                 # line format: video_path, video_duration, video_label
+                print('line_info', line_info)
                 if len(line_info) < 2:
                     raise(RuntimeError('Video input format is not correct, missing one or more element. %s' % line))
                 clip_path = os.path.join(line_info[0])
