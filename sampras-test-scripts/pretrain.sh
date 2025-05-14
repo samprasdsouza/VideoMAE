@@ -1,7 +1,7 @@
 # Set the path to save checkpoints
 OUTPUT_DIR='/shared/home/v_sampras_dsouza/my_scratch/VideoMAE/VideoMAE/k400_videomae_pretrain_base_patch16_224_frame_16x4_tube_mask_ratio_0.9_e100'
 # Set the path to Kinetics train set. 
-DATA_PATH='/shared/home/v_sampras_dsouza/my_scratch/shrec_21_video_dataset/train.csv'
+DATA_PATH='/shared/scratch/0/home/v_sampras_dsouza/shrec_21_video_dataset/train.csv'
 
 # batch_size can be adjusted according to number of GPUs
 # this script is for 64 GPUs (8 nodes x 8 GPUs)
