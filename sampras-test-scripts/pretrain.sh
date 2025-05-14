@@ -5,7 +5,7 @@ DATA_PATH='/shared/home/v_sampras_dsouza/my_scratch/shrec_21_video_dataset/train
 
 # batch_size can be adjusted according to number of GPUs
 # this script is for 64 GPUs (8 nodes x 8 GPUs)
-CUDA_VISIBLE_DEVICES="0" python ../run_mae_pretraining.py \
+python ../run_mae_pretraining.py \
         --data_path ${DATA_PATH} \
         --mask_type tube \
         --mask_ratio 0.9 \
