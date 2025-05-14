@@ -8,7 +8,7 @@ DATA_PATH='/shared/scratch/0/home/v_sampras_dsouza/shrec_21_video_dataset/train.
 nohup python ../run_mae_pretraining.py \
         --data_path ${DATA_PATH} \
         --mask_type tube \
-        --mask_ratio 0.9 \
+        --mask_ratio 0.8 \
         --model pretrain_videomae_base_patch16_224 \
         --decoder_depth 4 \
         --batch_size 1 \
@@ -17,8 +17,8 @@ nohup python ../run_mae_pretraining.py \
         --opt adamw \
         --opt_betas 0.9 0.95 \
         --warmup_epochs 2 \
-        --save_ckpt_freq 20 \
-        --epochs 21 \
+        --save_ckpt_freq 200 \
+        --epochs 301 \
         --weight_decay 0.05\
         --log_dir ${OUTPUT_DIR} \
         --output_dir ${OUTPUT_DIR}
