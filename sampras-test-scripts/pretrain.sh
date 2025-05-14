@@ -11,7 +11,7 @@ nohup python ../run_mae_pretraining.py \
         --mask_ratio 0.8 \
         --model pretrain_videomae_base_patch16_224 \
         --decoder_depth 4 \
-        --batch_size 1 \
+        --batch_size 10 \
         --num_frames 16 \
         --sampling_rate 4 \
         --opt adamw \
